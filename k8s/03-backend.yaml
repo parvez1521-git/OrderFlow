@@ -1,0 +1,363 @@
+# Local Kubernetes deployments for OrderFlow .NET services and YARP Gateway.
+# Images use the :local tag built on your own machine; nothing is pushed online.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-api
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-api
+  template:
+    metadata:
+      labels:
+        app: auth-api
+    spec:
+      containers:
+        - name: auth-api
+          image: orderflow/auth-api:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ConnectionStrings__OrderFlowDatabase
+              value: "Server=sqlserver,1433;Database=OrderFlow;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True;MultipleActiveResultSets=true"
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-api
+  namespace: orderflow-local
+spec:
+  selector: { app: auth-api }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-service
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: customer-service }
+  template:
+    metadata:
+      labels: { app: customer-service }
+    spec:
+      containers:
+        - name: customer-service
+          image: orderflow/customer-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ConnectionStrings__Database
+              value: "Server=sqlserver,1433;Database=OrderFlow.CustomerService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-service
+  namespace: orderflow-local
+spec:
+  selector: { app: customer-service }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: product-service }
+  template:
+    metadata:
+      labels: { app: product-service }
+    spec:
+      containers:
+        - name: product-service
+          image: orderflow/product-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ConnectionStrings__Database
+              value: "Server=sqlserver,1433;Database=OrderFlow.ProductService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+            - name: ConnectionStrings__Redis
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: REDIS_CONNECTION } }
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: orderflow-local
+spec:
+  selector: { app: product-service }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: inventory-service }
+  template:
+    metadata:
+      labels: { app: inventory-service }
+    spec:
+      containers:
+        - name: inventory-service
+          image: orderflow/inventory-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ConnectionStrings__Database
+              value: "Server=sqlserver,1433;Database=OrderFlow.InventoryService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: orderflow-local
+spec:
+  selector: { app: inventory-service }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: payment-service }
+  template:
+    metadata:
+      labels: { app: payment-service }
+    spec:
+      containers:
+        - name: payment-service
+          image: orderflow/payment-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ConnectionStrings__Database
+              value: "Server=sqlserver,1433;Database=OrderFlow.PaymentService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: orderflow-local
+spec:
+  selector: { app: payment-service }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: notification-service }
+  template:
+    metadata:
+      labels: { app: notification-service }
+    spec:
+      containers:
+        - name: notification-service
+          image: orderflow/notification-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ConnectionStrings__Database
+              value: "Server=sqlserver,1433;Database=OrderFlow.NotificationService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+            - name: RabbitMQ__HostName
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: RABBITMQ_HOST } }
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: orderflow-local
+spec:
+  selector: { app: notification-service }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: order-service }
+  template:
+    metadata:
+      labels: { app: order-service }
+    spec:
+      containers:
+        - name: order-service
+          image: orderflow/order-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ConnectionStrings__Database
+              value: "Server=sqlserver,1433;Database=OrderFlow.OrderService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+            - name: ServiceUrls__ProductService
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: PRODUCT_SERVICE_URL } }
+            - name: ServiceUrls__InventoryService
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: INVENTORY_SERVICE_URL } }
+            - name: ServiceUrls__PaymentService
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: PAYMENT_SERVICE_URL } }
+            - name: ServiceUrls__NotificationService
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: NOTIFICATION_SERVICE_URL } }
+            - name: RabbitMQ__HostName
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: RABBITMQ_HOST } }
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: orderflow-local
+spec:
+  selector: { app: order-service }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: orderflow-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gateway }
+  template:
+    metadata:
+      labels: { app: gateway }
+    spec:
+      containers:
+        - name: gateway
+          image: orderflow/gateway:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_ENVIRONMENT } }
+            - name: ASPNETCORE_URLS
+              valueFrom: { configMapKeyRef: { name: orderflow-config, key: ASPNETCORE_URLS } }
+            - name: ReverseProxy__Clusters__customers__Destinations__default__Address
+              value: http://customer-service:8080/
+            - name: ReverseProxy__Clusters__products__Destinations__default__Address
+              value: http://product-service:8080/
+            - name: ReverseProxy__Clusters__inventory__Destinations__default__Address
+              value: http://inventory-service:8080/
+            - name: ReverseProxy__Clusters__orders__Destinations__default__Address
+              value: http://order-service:8080/
+            - name: ReverseProxy__Clusters__payments__Destinations__default__Address
+              value: http://payment-service:8080/
+            - name: ReverseProxy__Clusters__notifications__Destinations__default__Address
+              value: http://notification-service:8080/
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: orderflow-local
+spec:
+  selector: { app: gateway }
+  ports:
+    - port: 8080
+      targetPort: 8080

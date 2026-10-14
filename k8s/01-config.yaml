@@ -1,0 +1,28 @@
+# Local-only configuration shared by the OrderFlow Kubernetes pods.
+# This uses Kubernetes service DNS names, not localhost, because containers talk
+# to each other inside the cluster network.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orderflow-config
+  namespace: orderflow-local
+data:
+  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_URLS: http://+:8080
+  PRODUCT_SERVICE_URL: http://product-service:8080
+  CUSTOMER_SERVICE_URL: http://customer-service:8080
+  INVENTORY_SERVICE_URL: http://inventory-service:8080
+  ORDER_SERVICE_URL: http://order-service:8080
+  PAYMENT_SERVICE_URL: http://payment-service:8080
+  NOTIFICATION_SERVICE_URL: http://notification-service:8080
+  RABBITMQ_HOST: rabbitmq
+  REDIS_CONNECTION: redis:6379
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orderflow-sql-secret
+  namespace: orderflow-local
+type: Opaque
+stringData:
+  sa-password: OrderFlow_Local_12345!

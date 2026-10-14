@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Gateway/">
+    <Project Path="Gateway/OrderFlow.Gateway.csproj" />
+  </Folder>
+  <Folder Name="/Services/" />
+  <Folder Name="/Services/CustomerService/">
+    <Project Path="Services/CustomerService/OrderFlow.CustomerService.csproj" />
+  </Folder>
+  <Folder Name="/Services/InventoryService/">
+    <Project Path="Services/InventoryService/OrderFlow.InventoryService.csproj" />
+  </Folder>
+  <Folder Name="/Services/NotificationService/">
+    <Project Path="Services/NotificationService/OrderFlow.NotificationService.csproj" />
+  </Folder>
+  <Folder Name="/Services/OrderService/">
+    <Project Path="Services/OrderService/OrderFlow.OrderService.csproj" />
+  </Folder>
+  <Folder Name="/Services/PaymentService/">
+    <Project Path="Services/PaymentService/OrderFlow.PaymentService.csproj" />
+  </Folder>
+  <Folder Name="/Services/ProductService/">
+    <Project Path="Services/ProductService/OrderFlow.ProductService.csproj" />
+  </Folder>
+  <Folder Name="/Services/AiService/">
+    <Project Path="Services/AiService/OrderFlow.AiService.csproj" />
+  </Folder>
+  <Project Path="OrderFlow.Api/OrderFlow.Api.csproj" />
+  <Project Path="OrderFlow.AppHost/OrderFlow.AppHost.csproj" />
+</Solution>

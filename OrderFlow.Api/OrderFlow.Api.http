@@ -1,0 +1,8 @@
+# Manual HTTP request scratch file for API testing from Visual Studio/VS Code.
+# Enterprise concept: repeatable API requests complement Swagger and automated tests.
+@OrderFlow.Api_HostAddress = http://localhost:5078
+
+GET {{OrderFlow.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

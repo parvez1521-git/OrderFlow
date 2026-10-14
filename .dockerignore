@@ -1,0 +1,16 @@
+# This file keeps Docker builds fast and local by excluding generated files,
+# dependencies, and previous build artifacts from the Docker build context.
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/.vite/
+**/artifacts/
+.git/
+.vs/
+.vscode/
+*.user
+*.suo
+*.docx
+*.log

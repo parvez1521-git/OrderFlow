@@ -1,0 +1,241 @@
+# Phase 18 local Docker Compose environment for OrderFlow.
+# This runs everything on your laptop only: SQL Server, Redis, RabbitMQ,
+# backend services, YARP Gateway, React Customer Portal, and Angular Admin Portal.
+name: orderflow-local
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: orderflow-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "OrderFlow_Local_12345!"
+      MSSQL_PID: "Developer"
+    ports:
+      - "14333:1433"
+    volumes:
+      - orderflow-sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'OrderFlow_Local_12345!' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: orderflow-redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: orderflow-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  auth-api:
+    image: orderflow/auth-api:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: OrderFlow.Api/OrderFlow.Api.csproj
+        DLL_NAME: OrderFlow.Api.dll
+    container_name: orderflow-auth-api
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__OrderFlowDatabase: "Server=sqlserver,1433;Database=OrderFlow;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True;MultipleActiveResultSets=true"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    ports:
+      - "5078:8080"
+
+  customer-service:
+    image: orderflow/customer-service:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: Services/CustomerService/OrderFlow.CustomerService.csproj
+        DLL_NAME: OrderFlow.CustomerService.dll
+    container_name: orderflow-customer-service
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Database: "Server=sqlserver,1433;Database=OrderFlow.CustomerService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    ports:
+      - "6101:8080"
+
+  product-service:
+    image: orderflow/product-service:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: Services/ProductService/OrderFlow.ProductService.csproj
+        DLL_NAME: OrderFlow.ProductService.dll
+    container_name: orderflow-product-service
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Database: "Server=sqlserver,1433;Database=OrderFlow.ProductService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+      ConnectionStrings__Redis: "redis:6379"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "6102:8080"
+
+  inventory-service:
+    image: orderflow/inventory-service:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: Services/InventoryService/OrderFlow.InventoryService.csproj
+        DLL_NAME: OrderFlow.InventoryService.dll
+    container_name: orderflow-inventory-service
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Database: "Server=sqlserver,1433;Database=OrderFlow.InventoryService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    ports:
+      - "6103:8080"
+
+  order-service:
+    image: orderflow/order-service:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: Services/OrderService/OrderFlow.OrderService.csproj
+        DLL_NAME: OrderFlow.OrderService.dll
+    container_name: orderflow-order-service
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Database: "Server=sqlserver,1433;Database=OrderFlow.OrderService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+      ServiceUrls__ProductService: "http://product-service:8080"
+      ServiceUrls__InventoryService: "http://inventory-service:8080"
+      ServiceUrls__PaymentService: "http://payment-service:8080"
+      ServiceUrls__NotificationService: "http://notification-service:8080"
+      RabbitMQ__HostName: "rabbitmq"
+    depends_on:
+      product-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    ports:
+      - "6104:8080"
+
+  payment-service:
+    image: orderflow/payment-service:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: Services/PaymentService/OrderFlow.PaymentService.csproj
+        DLL_NAME: OrderFlow.PaymentService.dll
+    container_name: orderflow-payment-service
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Database: "Server=sqlserver,1433;Database=OrderFlow.PaymentService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    ports:
+      - "6105:8080"
+
+  notification-service:
+    image: orderflow/notification-service:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: Services/NotificationService/OrderFlow.NotificationService.csproj
+        DLL_NAME: OrderFlow.NotificationService.dll
+    container_name: orderflow-notification-service
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Database: "Server=sqlserver,1433;Database=OrderFlow.NotificationService;User Id=sa;Password=OrderFlow_Local_12345!;TrustServerCertificate=True"
+      RabbitMQ__HostName: "rabbitmq"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    ports:
+      - "6106:8080"
+
+  gateway:
+    image: orderflow/gateway:local
+    build:
+      context: .
+      dockerfile: docker/dotnet-service.Dockerfile
+      args:
+        PROJECT_PATH: Gateway/OrderFlow.Gateway.csproj
+        DLL_NAME: OrderFlow.Gateway.dll
+    container_name: orderflow-gateway
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ReverseProxy__Clusters__customers__Destinations__default__Address: "http://customer-service:8080/"
+      ReverseProxy__Clusters__products__Destinations__default__Address: "http://product-service:8080/"
+      ReverseProxy__Clusters__inventory__Destinations__default__Address: "http://inventory-service:8080/"
+      ReverseProxy__Clusters__orders__Destinations__default__Address: "http://order-service:8080/"
+      ReverseProxy__Clusters__payments__Destinations__default__Address: "http://payment-service:8080/"
+      ReverseProxy__Clusters__notifications__Destinations__default__Address: "http://notification-service:8080/"
+      ReverseProxy__Clusters__ai__Destinations__default__Address: "http://host.docker.internal:6107/"
+      ReverseProxy__Routes__ai__ClusterId: "ai"
+      ReverseProxy__Routes__ai__Match__Path: "/api/ai/{**catch-all}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      customer-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+    ports:
+      - "6200:8080"
+
+  customer-portal:
+    image: orderflow/customer-portal:local
+    build:
+      context: .
+      dockerfile: CustomerPortal/Dockerfile
+    container_name: orderflow-customer-portal
+    depends_on:
+      gateway:
+        condition: service_started
+    ports:
+      - "5173:80"
+
+  admin-portal:
+    image: orderflow/admin-portal:local
+    build:
+      context: .
+      dockerfile: AdminPortal/Dockerfile
+    container_name: orderflow-admin-portal
+    depends_on:
+      gateway:
+        condition: service_started
+    ports:
+      - "4200:80"
+
+volumes:
+  orderflow-sqlserver-data:

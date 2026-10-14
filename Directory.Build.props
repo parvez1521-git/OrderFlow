@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Generated verification build outputs should never be treated as source files. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\artifacts\**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

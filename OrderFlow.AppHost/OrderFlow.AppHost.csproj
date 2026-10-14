@@ -1,0 +1,26 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>orderflow-apphost-dev</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.0.0" />
+    <PackageReference Include="MessagePack" Version="3.1.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OrderFlow.Api\OrderFlow.Api.csproj" />
+    <ProjectReference Include="..\Gateway\OrderFlow.Gateway.csproj" />
+    <ProjectReference Include="..\Services\CustomerService\OrderFlow.CustomerService.csproj" />
+    <ProjectReference Include="..\Services\ProductService\OrderFlow.ProductService.csproj" />
+    <ProjectReference Include="..\Services\InventoryService\OrderFlow.InventoryService.csproj" />
+    <ProjectReference Include="..\Services\OrderService\OrderFlow.OrderService.csproj" />
+    <ProjectReference Include="..\Services\PaymentService\OrderFlow.PaymentService.csproj" />
+    <ProjectReference Include="..\Services\NotificationService\OrderFlow.NotificationService.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+# Phase 19 local Kubernetes namespace for OrderFlow.
+# Apply this to Docker Desktop Kubernetes, Minikube, or Kind on your own machine.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orderflow-local

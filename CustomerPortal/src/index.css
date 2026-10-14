@@ -1,0 +1,2 @@
+/* Global browser styles shared by the React application. */
+:root { font-family: Inter, system-ui, sans-serif; color: #172033; background: #f4f7fb; } * { box-sizing: border-box; } body { margin: 0; } button, input { font: inherit; }
